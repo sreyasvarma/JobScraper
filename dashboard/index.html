@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Alert — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080c10; --surface: #0d1117; --surface2: #111820;
+      --border: #1c2733; --border2: #243040;
+      --green: #39d353; --green-dim: #1a6628;
+      --cyan: #58d8f5; --amber: #f0b429; --red: #ff5e5e;
+      --text: #cdd9e5; --muted: #586e82; --tag-bg: #12202e;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; }
+    body::before { content:''; position:fixed; inset:0; z-index:9999; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px); }
+    .shell { display:grid; grid-template-columns:220px 1fr; grid-template-rows:56px 1fr; min-height:100vh; }
+
+    /* TOPBAR */
+    .topbar { grid-column:1/-1; display:flex; align-items:center; gap:16px; padding:0 24px; border-bottom:1px solid var(--border); background:var(--surface); }
+    .topbar-logo { font-family:'Syne',sans-serif; font-size:17px; font-weight:800; color:var(--green); letter-spacing:-0.02em; }
+    .topbar-logo span { color:var(--muted); font-weight:400; }
+    .topbar-badge { background:var(--green-dim); color:var(--green); font-size:10px; padding:2px 8px; border-radius:3px; font-weight:600; letter-spacing:.08em; animation:pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
+    .topbar-spacer { flex:1; }
+    .topbar-time { font-size:11px; color:var(--muted); }
+
+    /* SIDEBAR */
+    .sidebar { border-right:1px solid var(--border); background:var(--surface); padding:20px 0; display:flex; flex-direction:column; gap:4px; }
+    .sidebar-section { font-size:9px; color:var(--muted); letter-spacing:.12em; padding:12px 20px 6px; text-transform:uppercase; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:9px 20px; font-size:12px; color:var(--muted); cursor:pointer; transition:all .15s; border-left:2px solid transparent; user-select:none; }
+    .nav-item:hover { color:var(--text); background:rgba(255,255,255,.03); }
+    .nav-item.active { color:var(--green); border-left-color:var(--green); background:rgba(57,211,83,.05); }
+    .nav-icon { font-size:14px; width:18px; text-align:center; }
+    .nav-count { margin-left:auto; background:var(--tag-bg); color:var(--muted); font-size:10px; padding:1px 7px; border-radius:20px; }
+    .nav-item.active .nav-count { background:var(--green-dim); color:var(--green); }
+    .sidebar-footer { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); }
+    .run-btn { width:100%; padding:10px; border:1px solid var(--green-dim); background:rgba(57,211,83,.07); color:var(--green); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px; letter-spacing:.05em; transition:all .15s; }
+    .run-btn:hover { background:rgba(57,211,83,.15); border-color:var(--green); }
+    .run-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .run-status { font-size:10px; color:var(--muted); text-align:center; margin-top:8px; min-height:14px; }
+
+    /* MAIN */
+    .main { overflow-y:auto; display:flex; flex-direction:column; }
+    .page { display:none; flex-direction:column; flex:1; padding:28px; gap:24px; }
+    .page.active { display:flex; }
+
+    /* STATS */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px 20px; animation:fadeUp .4s ease both; }
+    .stat-card:nth-child(2){animation-delay:.05s}.stat-card:nth-child(3){animation-delay:.1s}.stat-card:nth-child(4){animation-delay:.15s}
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none} }
+    .stat-label { font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; }
+    .stat-value { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; color:var(--green); line-height:1; }
+    .stat-sub { font-size:10px; color:var(--muted); margin-top:6px; }
+
+    /* SECTION */
+    .section-head { display:flex; align-items:center; gap:12px; }
+    .section-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; }
+    .section-line { flex:1; height:1px; background:var(--border); }
+    .section-meta { font-size:11px; color:var(--muted); white-space:nowrap; }
+
+    /* TABLE */
+    .job-table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+    .job-table { width:100%; border-collapse:collapse; }
+    .job-table thead { background:rgba(255,255,255,.02); }
+    .job-table th { font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; padding:11px 16px; text-align:left; border-bottom:1px solid var(--border); }
+    .job-row { border-bottom:1px solid var(--border); transition:background .12s; animation:fadeUp .3s ease both; }
+    .job-row:last-child { border-bottom:none; }
+    .job-row:hover { background:rgba(255,255,255,.02); }
+    .job-row td { padding:13px 16px; font-size:12px; vertical-align:middle; }
+    .job-title-cell a { color:var(--text); text-decoration:none; font-weight:500; }
+    .job-title-cell a:hover { color:var(--cyan); }
+    .company-tag { display:inline-block; background:var(--tag-bg); color:var(--muted); font-size:10px; padding:3px 10px; border-radius:3px; border:1px solid var(--border); }
+    .location-text { color:var(--muted); font-size:11px; }
+    .apply-btn { background:transparent; border:1px solid var(--border2); color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 12px; border-radius:3px; cursor:pointer; transition:all .15s; text-decoration:none; display:inline-block; }
+    .apply-btn:hover { border-color:var(--green); color:var(--green); background:rgba(57,211,83,.06); }
+    .date-text { color:var(--muted); font-size:11px; }
+    .new-badge { display:inline-block; background:rgba(57,211,83,.15); color:var(--green); font-size:9px; padding:2px 6px; border-radius:3px; font-weight:700; letter-spacing:.08em; margin-left:8px; vertical-align:middle; }
+
+    /* FILTER */
+    .filter-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .filter-input { background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12px; padding:8px 14px; border-radius:4px; outline:none; width:220px; transition:border-color .15s; }
+    .filter-input:focus { border-color:var(--green); }
+    .filter-input::placeholder { color:var(--muted); }
+    .filter-input option { background:var(--surface); color:var(--text); }
+    /* Remote badge */
+    .remote-badge { display:inline-block; background:rgba(57,211,83,.15); color:var(--green); font-size:9px; padding:2px 8px; border-radius:3px; font-weight:700; letter-spacing:.08em; border:1px solid var(--green-dim); }
+    /* Status buttons */
+    .status-btn { font-size:9px; padding:3px 8px; border-radius:3px; border:1px solid var(--border); background:none; color:var(--muted); font-family:'JetBrains Mono',monospace; cursor:pointer; transition:all .15s; margin-left:2px; }
+    .status-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+    .status-btn.active-saved    { background:rgba(88,216,245,.12); border-color:var(--cyan); color:var(--cyan); }
+    .status-btn.active-applied  { background:rgba(57,211,83,.12);  border-color:var(--green); color:var(--green); }
+    .status-btn.active-rejected { background:rgba(255,94,94,.12);  border-color:var(--red);  color:var(--red); }
+    /* Status filter tabs */
+    .status-tabs { display:flex; gap:8px; }
+    .status-tab { padding:6px 14px; border:1px solid var(--border); border-radius:4px; font-size:11px; color:var(--muted); cursor:pointer; transition:all .15s; background:none; font-family:'JetBrains Mono',monospace; }
+    .status-tab:hover { border-color:var(--border2); color:var(--text); }
+    .status-tab.active { border-color:var(--green); color:var(--green); background:rgba(57,211,83,.07); }
+    /* Digest button */
+    .digest-btn { padding:6px 14px; border:1px solid rgba(88,216,245,.3); border-radius:4px; font-size:11px; color:var(--cyan); cursor:pointer; background:rgba(88,216,245,.06); font-family:'JetBrains Mono',monospace; transition:all .15s; }
+    .digest-btn:hover { background:rgba(88,216,245,.14); border-color:var(--cyan); }
+    .filter-chip { background:var(--tag-bg); border:1px solid var(--border); color:var(--muted); font-size:11px; padding:6px 14px; border-radius:20px; cursor:pointer; transition:all .15s; }
+    .filter-chip:hover,.filter-chip.active { border-color:var(--cyan); color:var(--cyan); background:rgba(88,216,245,.07); }
+
+    /* COMPANIES GRID */
+    .companies-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; }
+    .company-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px 20px; transition:border-color .15s; animation:fadeUp .35s ease both; position:relative; }
+    .company-card:hover { border-color:var(--border2); }
+    .company-card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; padding-right:28px; }
+    .company-card-url { font-size:10px; color:var(--muted); margin-bottom:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .company-card-meta { display:flex; gap:10px; align-items:center; }
+    .type-tag { font-size:9px; padding:3px 8px; border-radius:3px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+    .type-static { background:rgba(88,216,245,.1); color:var(--cyan); }
+    .type-js { background:rgba(240,180,41,.1); color:var(--amber); }
+    .company-job-count { margin-left:auto; font-size:11px; color:var(--muted); }
+    .delete-btn { position:absolute; top:14px; right:14px; background:none; border:1px solid transparent; color:var(--muted); font-size:14px; cursor:pointer; border-radius:4px; padding:2px 6px; transition:all .15s; line-height:1; }
+    .delete-btn:hover { border-color:var(--red); color:var(--red); background:rgba(255,94,94,.08); }
+
+    /* ── ADD COMPANY PANEL ── */
+    .add-panel { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+    .add-panel-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; }
+    .add-panel-header:hover { background:rgba(255,255,255,.02); }
+    .add-panel-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:10px; }
+    .add-panel-title .plus { color:var(--green); font-size:20px; line-height:1; }
+    .add-panel-chevron { color:var(--muted); transition:transform .2s; }
+    .add-panel-chevron.open { transform:rotate(180deg); }
+    .add-panel-body { display:none; padding:24px; }
+    .add-panel-body.open { display:block; }
+
+    /* SEARCH BOX */
+    .search-box { display:flex; gap:10px; align-items:stretch; }
+    .search-input-wrap { flex:1; position:relative; }
+    .search-input {
+      width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text);
+      font-family:'JetBrains Mono',monospace; font-size:14px;
+      padding:12px 16px 12px 42px; border-radius:6px; outline:none; transition:border-color .2s;
+    }
+    .search-input:focus { border-color:var(--green); }
+    .search-input::placeholder { color:var(--muted); }
+    .search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:16px; color:var(--muted); pointer-events:none; }
+    .search-btn {
+      padding:12px 22px; background:rgba(57,211,83,.1); border:1px solid var(--green-dim);
+      color:var(--green); font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600;
+      border-radius:6px; cursor:pointer; transition:all .15s; white-space:nowrap;
+    }
+    .search-btn:hover { background:rgba(57,211,83,.2); border-color:var(--green); }
+    .search-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .search-hint { font-size:11px; color:var(--muted); margin-top:8px; }
+
+    /* RESULT CARD */
+    .result-card { margin-top:20px; border:1px solid var(--border); border-radius:6px; overflow:hidden; display:none; animation:fadeUp .25s ease both; }
+    .result-card.visible { display:block; }
+
+    /* states */
+    .state-searching { padding:24px; display:flex; align-items:center; gap:14px; }
+    .spinner { width:18px; height:18px; border:2px solid var(--border2); border-top-color:var(--green); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .state-searching-text { font-size:12px; color:var(--muted); }
+
+    .result-found { }
+    .result-found-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; background:rgba(57,211,83,.04); }
+    .result-company-name { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; color:var(--text); }
+    .result-url { font-size:11px; color:var(--muted); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:400px; }
+    .result-badges { display:flex; gap:8px; margin-left:auto; align-items:center; flex-shrink:0; }
+    .result-badge { font-size:10px; padding:4px 10px; border-radius:4px; font-weight:600; letter-spacing:.05em; }
+    .badge-jobs { background:rgba(57,211,83,.12); color:var(--green); border:1px solid var(--green-dim); }
+    .badge-js { background:rgba(240,180,41,.1); color:var(--amber); border:1px solid rgba(240,180,41,.3); }
+    .badge-static { background:rgba(88,216,245,.1); color:var(--cyan); border:1px solid rgba(88,216,245,.3); }
+    .badge-warn { background:rgba(240,180,41,.1); color:var(--amber); border:1px solid rgba(240,180,41,.3); }
+
+    .result-found-body { padding:16px 20px; background:var(--bg); }
+    .result-samples-label { font-size:9px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; }
+    .result-samples { display:flex; flex-direction:column; gap:6px; margin-bottom:18px; }
+    .result-sample { font-size:12px; color:var(--text); padding:8px 12px; background:var(--surface); border-radius:4px; border:1px solid var(--border); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .result-found-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:center; }
+    .url-edit-wrap { flex:1; display:flex; align-items:center; gap:8px; }
+    .url-edit-label { font-size:10px; color:var(--muted); white-space:nowrap; }
+    .url-edit-input { flex:1; background:var(--surface); border:1px solid var(--border); color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 10px; border-radius:4px; outline:none; transition:border-color .15s; }
+    .url-edit-input:focus { border-color:var(--green); color:var(--text); }
+    .reprobe-btn { font-size:10px; padding:6px 12px; background:none; border:1px solid var(--border); color:var(--muted); font-family:'JetBrains Mono',monospace; border-radius:4px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .reprobe-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+    .confirm-btn { padding:10px 24px; background:rgba(57,211,83,.12); border:1px solid var(--green); color:var(--green); font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; border-radius:4px; cursor:pointer; transition:all .15s; }
+    .confirm-btn:hover { background:rgba(57,211,83,.22); }
+    .confirm-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+    .state-error { padding:20px; display:flex; align-items:flex-start; gap:12px; background:rgba(255,94,94,.04); }
+    .state-error-icon { color:var(--red); font-size:18px; flex-shrink:0; }
+    .state-error-text { font-size:12px; color:var(--muted); line-height:1.6; }
+    .state-error-text strong { color:var(--red); display:block; margin-bottom:4px; }
+    .manual-url-row { display:flex; gap:8px; margin-top:12px; }
+    .manual-url-input { flex:1; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px; padding:7px 10px; border-radius:4px; outline:none; transition:border-color .15s; }
+    .manual-url-input:focus { border-color:var(--cyan); }
+    .manual-url-input::placeholder { color:var(--muted); }
+    .manual-probe-btn { padding:7px 14px; background:none; border:1px solid var(--border2); color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px; border-radius:4px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .manual-probe-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+
+    /* MISC */
+    .empty { text-align:center; padding:60px 20px; color:var(--muted); font-size:13px; }
+    .empty-icon { font-size:40px; margin-bottom:12px; opacity:.5; }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:10px; }
+    .toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--green); color:var(--green); font-size:12px; padding:12px 20px; border-radius:6px; z-index:10000; opacity:0; transform:translateY(10px); transition:all .25s; pointer-events:none; }
+    .toast.show { opacity:1; transform:none; }
+    .toast.error { border-color:var(--red); color:var(--red); }
+    code { background:var(--tag-bg); padding:1px 6px; border-radius:3px; font-size:.9em; }
+    .api-warning { background:rgba(240,180,41,.07); border:1px solid rgba(240,180,41,.3); color:var(--amber); font-size:11px; padding:10px 16px; border-radius:4px; }
+
+    /* SETUP */
+    .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .setup-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:22px; animation:fadeUp .4s ease both; }
+    .setup-card-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .setup-card-desc { font-size:11px; color:var(--muted); margin-bottom:16px; line-height:1.6; }
+    .code-block { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:14px 16px; font-size:11px; line-height:1.8; color:var(--text); overflow-x:auto; position:relative; }
+    .code-block .cmd{color:var(--green)}.code-block .comment{color:var(--muted)}.code-block .key{color:var(--cyan)}.code-block .val{color:var(--amber)}
+    .copy-btn { position:absolute; top:8px; right:8px; background:var(--tag-bg); border:1px solid var(--border); color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:9px; padding:3px 8px; border-radius:3px; cursor:pointer; transition:all .15s; }
+    .copy-btn:hover { color:var(--green); border-color:var(--green); }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="topbar">
+    <div class="topbar-logo">job<span>/</span>alert</div>
+    <div class="topbar-badge">&#9679; LIVE</div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-time" id="clock"></div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <div class="nav-item active" onclick="navigate(this,'dashboard')"><span class="nav-icon">&#11041;</span> Dashboard <span class="nav-count" id="navTotal">-</span></div>
+    <div class="nav-item" onclick="navigate(this,'jobs')"><span class="nav-icon">&#10792;</span> All Jobs <span class="nav-count" id="navJobs">-</span></div>
+    <div class="nav-item" onclick="navigate(this,'companies')"><span class="nav-icon">&#9711;</span> Companies <span class="nav-count" id="navCompanies">-</span></div>
+    <div class="sidebar-section">Docs</div>
+    <div class="nav-item" onclick="navigate(this,'setup')"><span class="nav-icon">&#9671;</span> Setup Guide</div>
+    <div class="sidebar-footer">
+      <button class="run-btn" id="runBtn" onclick="triggerRun()">&#9654; Run Check Now</button>
+      <div class="run-status" id="runStatus"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div id="apiWarning" style="display:none" class="api-warning">API not reachable — run <code>python api.py</code> then refresh.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Jobs Found</div><div class="stat-value" id="statTotal">-</div><div class="stat-sub">across all companies</div></div>
+        <div class="stat-card"><div class="stat-label">Companies Tracked</div><div class="stat-value" id="statCompanies">-</div><div class="stat-sub">from config.yaml</div></div>
+        <div class="stat-card"><div class="stat-label">Scrape Runs</div><div class="stat-value" id="statRuns">-</div><div class="stat-sub">total checks done</div></div>
+        <div class="stat-card"><div class="stat-label">New (last 24h)</div><div class="stat-value" id="statNew" style="color:var(--cyan)">-</div><div class="stat-sub">fresh postings</div></div>
+      </div>
+      <!-- Application pipeline mini-stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="stat-card" style="padding:14px 18px">
+          <div class="stat-label">Saved</div>
+          <div class="stat-value" id="statSaved" style="font-size:24px;color:var(--cyan)">-</div>
+        </div>
+        <div class="stat-card" style="padding:14px 18px">
+          <div class="stat-label">Applied</div>
+          <div class="stat-value" id="statApplied" style="font-size:24px;color:var(--green)">-</div>
+        </div>
+        <div class="stat-card" style="padding:14px 18px">
+          <div class="stat-label">Remote Jobs</div>
+          <div class="stat-value" id="statRemote" style="font-size:24px;color:var(--amber)">-</div>
+        </div>
+      </div>
+      <div class="section-head"><div class="section-title">Recent Discoveries</div><div class="section-line"></div><div class="section-meta" id="lastChecked"></div></div>
+      <div class="job-table-wrap">
+        <table class="job-table">
+          <thead><tr><th>Role</th><th>Company</th><th>Location</th><th>Discovered</th><th>Status</th><th></th></tr></thead>
+          <tbody id="recentJobsBody"><tr><td colspan="5"><div class="empty">Loading...</div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="section-head"><div class="section-title">By Company</div><div class="section-line"></div></div>
+      <div class="companies-grid" id="companyBreakdown"></div>
+    </div>
+
+    <!-- ALL JOBS -->
+    <div class="page" id="page-jobs">
+      <div class="section-head"><div class="section-title">All Jobs</div><div class="section-line"></div><div class="section-meta" id="jobsPageCount"></div></div>
+      <div class="filter-bar">
+        <input class="filter-input" id="searchInput" placeholder="Search roles, companies..." oninput="renderAllJobs()" />
+        <select class="filter-input" id="locationFilter" onchange="renderAllJobs()" style="width:180px;cursor:pointer;">
+          <option value="">All Locations</option>
+        </select>
+        <div class="status-tabs">
+          <button class="status-tab active" onclick="setStatusTab(this,'all')">All</button>
+          <button class="status-tab" onclick="setStatusTab(this,'saved')">Saved</button>
+          <button class="status-tab" onclick="setStatusTab(this,'applied')">Applied</button>
+          <button class="status-tab" onclick="setStatusTab(this,'rejected')">Rejected</button>
+        </div>
+        <button class="digest-btn" onclick="sendDigest()" style="margin-left:auto">&#9993; Send Digest Now</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="companyFilters"></div>
+      <div class="job-table-wrap">
+        <table class="job-table">
+          <thead><tr><th>Role</th><th>Company</th><th>Location</th><th>Discovered</th><th>Status</th><th></th></tr></thead>
+          <tbody id="allJobsBody"><tr><td colspan="5"><div class="empty">Loading...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMPANIES -->
+    <div class="page" id="page-companies">
+      <div class="section-head">
+        <div class="section-title">Tracked Companies</div>
+        <div class="section-line"></div>
+        <div class="section-meta" id="companiesPageMeta"></div>
+      </div>
+
+      <!-- ADD PANEL -->
+      <div class="add-panel">
+        <div class="add-panel-header" onclick="toggleAddPanel()">
+          <div class="add-panel-title"><span class="plus">+</span> Track a New Company</div>
+          <div class="add-panel-chevron" id="addChevron">&#9660;</div>
+        </div>
+        <div class="add-panel-body" id="addPanelBody">
+
+          <div class="search-box">
+            <div class="search-input-wrap">
+              <span class="search-icon">&#128269;</span>
+              <input class="search-input" id="companySearchInput"
+                placeholder="Type a company name, e.g. Shopify, Figma, Airbnb..."
+                onkeydown="if(event.key==='Enter') searchCompany()" />
+            </div>
+            <button class="search-btn" id="searchBtn" onclick="searchCompany()">Find Careers Page</button>
+          </div>
+          <div class="search-hint">We'll automatically find their careers page and detect job listings.</div>
+
+          <!-- RESULT AREA -->
+          <div class="result-card" id="resultCard">
+
+            <!-- Searching state -->
+            <div class="state-searching" id="stateSearching" style="display:none">
+              <div class="spinner"></div>
+              <div class="state-searching-text" id="searchingText">Finding careers page...</div>
+            </div>
+
+            <!-- Found state -->
+            <div class="result-found" id="stateFound" style="display:none">
+              <div class="result-found-header">
+                <div>
+                  <div class="result-company-name" id="resultName"></div>
+                  <div class="result-url" id="resultUrl"></div>
+                </div>
+                <div class="result-badges" id="resultBadges"></div>
+              </div>
+              <div class="result-found-body" id="resultBody"></div>
+              <div class="result-found-footer">
+                <div class="url-edit-wrap">
+                  <span class="url-edit-label">URL:</span>
+                  <input class="url-edit-input" id="resultUrlEdit" placeholder="https://..." />
+                  <button class="reprobe-btn" onclick="reprobeUrl()">Re-detect</button>
+                </div>
+                <button class="confirm-btn" id="confirmBtn" onclick="confirmAdd()">&#10003; Start Tracking</button>
+              </div>
+            </div>
+
+            <!-- Error state -->
+            <div class="state-error" id="stateError" style="display:none">
+              <div class="state-error-icon">&#9888;</div>
+              <div class="state-error-text">
+                <strong id="errorHeading"></strong>
+                <span id="errorBody"></span>
+                <div class="manual-url-row">
+                  <input class="manual-url-input" id="manualUrlInput" placeholder="Paste the careers URL manually..." />
+                  <button class="manual-probe-btn" onclick="manualProbe()">Probe URL</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPANIES GRID -->
+      <div class="companies-grid" id="companiesGrid">
+        <div class="empty">Loading...</div>
+      </div>
+    </div>
+
+    <!-- SETUP -->
+    <div class="page" id="page-setup">
+      <div class="section-head"><div class="section-title">Local Setup Guide</div><div class="section-line"></div></div>
+      <div class="setup-grid">
+        <div class="setup-card">
+          <div class="setup-card-title">1 - Install Dependencies</div>
+          <div class="setup-card-desc">Create a virtual environment and install Python packages.</div>
+          <div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">copy</button>
+<div><span class="cmd">python -m venv</span> venv</div>
+<div><span class="cmd">source</span> venv/bin/activate</div>
+<div><span class="comment"># Windows: venv\Scripts\activate</span></div>
+<div><span class="cmd">pip install</span> -r requirements.txt</div>
+<div><span class="cmd">playwright install</span> chromium</div></div>
+        </div>
+        <div class="setup-card">
+          <div class="setup-card-title">2 - Configure Email</div>
+          <div class="setup-card-desc">Edit config.yaml. Use a Gmail App Password (Google Account &gt; Security &gt; 2FA &gt; App Passwords).</div>
+          <div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">copy</button>
+<div><span class="key">email:</span></div>
+<div>  <span class="key">sender:</span>    <span class="val">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dea7b1ab9eb9b3bfb7b2f0bdb1b3">[email&#160;protected]</a>"</span></div>
+<div>  <span class="key">password:</span>  <span class="val">"xxxx xxxx xxxx xxxx"</span></div>
+<div>  <span class="key">recipient:</span> <span class="val">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2a44455e434c536a4f474b434604494547">[email&#160;protected]</a>"</span></div></div>
+        </div>
+        <div class="setup-card">
+          <div class="setup-card-title">3 - Run Locally</div>
+          <div class="setup-card-desc">Two terminals: backend API + test scraper. Open the dashboard HTML in your browser.</div>
+          <div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">copy</button>
+<div><span class="comment"># Terminal 1</span></div>
+<div><span class="cmd">python api.py</span></div>
+<div>&nbsp;</div>
+<div><span class="comment"># Terminal 2</span></div>
+<div><span class="cmd">python main.py</span> --dry-run</div></div>
+        </div>
+        <div class="setup-card">
+          <div class="setup-card-title">4 - GitHub Actions (Free)</div>
+          <div class="setup-card-desc">Push to a private repo, add 3 secrets, runs every 4 hours automatically.</div>
+          <div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">copy</button>
+<div><span class="comment"># Settings &gt; Secrets &gt; Actions</span></div>
+<div><span class="key">EMAIL_SENDER</span>    <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d5acbaa095b2b8b4bcb9fbb6bab8">[email&#160;protected]</a></div>
+<div><span class="key">EMAIL_PASSWORD</span>  app-password</div>
+<div><span class="key">EMAIL_RECIPIENT</span> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="97f9f8e3fef1eed7f2faf6fefbb9f4f8fa">[email&#160;protected]</a></div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const API = 'http://localhost:5000/api';
+let allJobs = [];
+let activeCompany = null;
+let allLocations = [];
+let activeStatusTab = 'all';
+let currentResult = null;   // holds the last search/probe result
+const cutoff24h = () => new Date(Date.now() - 86400000);
+
+// ── Clock ──
+setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US',{hour12:false}); }, 1000);
+
+// ── Navigation ──
+function navigate(el, page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+  if (page === 'companies') loadCompanies();
+}
+
+// ── Toast ──
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso.endsWith('Z') ? iso : iso+'Z');
+  const diff = Date.now() - d.getTime();
+  if (diff < 3600000) return Math.floor(diff/60000)+'m ago';
+  if (diff < 86400000) return Math.floor(diff/3600000)+'h ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+function jobRow(job) {
+  const isNew = new Date((job.seen_at||'')+'Z') > cutoff24h();
+  const badge  = isNew ? '<span class="new-badge">NEW</span>' : '';
+  const url    = esc(job.url||'#');
+  const status = job.status || 'none';
+
+  const locHtml = job.is_remote
+    ? '<span class="remote-badge">REMOTE</span>'
+    : `<span class="location-text">${esc(job.location||'Not specified')}</span>`;
+
+  const statusHtml = `
+    <button class="status-btn ${status==='saved'?'active-saved':''}"    onclick="setStatus('${job.id}','${status==='saved'?'none':'saved'}',this,'saved')"    title="Save">&#9733;</button>
+    <button class="status-btn ${status==='applied'?'active-applied':''}" onclick="setStatus('${job.id}','${status==='applied'?'none':'applied'}',this,'applied')" title="Applied">&#10003;</button>
+    <button class="status-btn ${status==='rejected'?'active-rejected':''}" onclick="setStatus('${job.id}','${status==='rejected'?'none':'rejected'}',this,'rejected')" title="Reject">&#10007;</button>`;
+
+  return `<tr class="job-row" data-id="${job.id}" data-status="${status}">
+    <td class="job-title-cell"><a href="${url}" target="_blank">${esc(job.title)}${badge}</a></td>
+    <td><span class="company-tag">${esc(job.company)}</span></td>
+    <td>${locHtml}</td>
+    <td><span class="date-text">${fmtDate(job.seen_at)}</span></td>
+    <td style="white-space:nowrap">${statusHtml}</td>
+    <td><a href="${url}" target="_blank" class="apply-btn">apply</a></td>
+  </tr>`;
+}
+
+// ── Stats ──
+async function loadStats() {
+  try {
+    const s = await fetch(`${API}/stats`).then(r=>r.json());
+    document.getElementById('apiWarning').style.display = 'none';
+    document.getElementById('statTotal').textContent = s.total_jobs ?? 0;
+    document.getElementById('statCompanies').textContent = s.companies_tracked ?? 0;
+    document.getElementById('statRuns').textContent = s.total_runs ?? 0;
+    document.getElementById('navTotal').textContent = s.total_jobs ?? 0;
+    document.getElementById('navJobs').textContent = s.total_jobs ?? 0;
+    document.getElementById('navCompanies').textContent = s.companies_tracked ?? 0;
+    document.getElementById('statSaved').textContent   = s.saved ?? 0;
+    document.getElementById('statApplied').textContent = s.applied ?? 0;
+    document.getElementById('statRemote').textContent  = s.remote_jobs ?? 0;
+    if (s.by_company?.length) {
+      document.getElementById('companyBreakdown').innerHTML = s.by_company.map((c,i) =>
+        `<div class="company-card" style="animation-delay:${i*.04}s">
+          <div class="company-card-name">${esc(c.company)}</div>
+          <div class="company-job-count">${c.count} job${c.count!==1?'s':''} found</div>
+        </div>`).join('');
+    }
+  } catch(e) { document.getElementById('apiWarning').style.display = 'block'; }
+}
+
+// ── Recent jobs ──
+async function loadRecentJobs() {
+  try {
+    const data = await fetch(`${API}/jobs?limit=20`).then(r=>r.json());
+    const jobs = data.jobs ?? data;
+    document.getElementById('statNew').textContent = jobs.filter(j => new Date((j.seen_at||'')+'Z') > cutoff24h()).length;
+    const body = document.getElementById('recentJobsBody');
+    body.innerHTML = jobs.length ? jobs.map(jobRow).join('')
+      : `<tr><td colspan="5"><div class="empty"><div class="empty-icon">&#11041;</div>No jobs yet - run a check first</div></td></tr>`;
+    if (jobs.length) document.getElementById('lastChecked').textContent = 'Last: ' + fmtDate(jobs[0]?.seen_at);
+  } catch(e) {
+    document.getElementById('recentJobsBody').innerHTML = `<tr><td colspan="5"><div class="empty">Run <code>python api.py</code> to connect</div></td></tr>`;
+  }
+}
+
+// ── All jobs ──
+async function loadAllJobs() {
+  try {
+    const data = await fetch(`${API}/jobs?limit=2000`).then(r=>r.json());
+    allJobs = data.jobs ?? data;
+    buildFilters();
+    loadLocations();
+    renderAllJobs();
+  } catch(e) {
+    document.getElementById('allJobsBody').innerHTML = `<tr><td colspan="5"><div class="empty">Start API with <code>python api.py</code></div></td></tr>`;
+  }
+}
+
+async function loadLocations() {
+  try {
+    const locs = await fetch(`${API}/locations`).then(r=>r.json());
+    allLocations = locs;
+    const sel = document.getElementById('locationFilter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All Locations</option>';
+    locs.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.location;
+      opt.textContent = `${l.location} (${l.count})`;
+      sel.appendChild(opt);
+    });
+    sel.value = current;
+  } catch(e) {}
+}
+
+function renderAllJobs() {
+  const q   = document.getElementById('searchInput').value.toLowerCase();
+  const loc = document.getElementById('locationFilter').value.toLowerCase();
+  let list  = allJobs;
+  if (activeCompany)             list = list.filter(j => j.company === activeCompany);
+  if (loc)                       list = list.filter(j => j.is_remote ? 'remote'.includes(loc) : (j.location||'').toLowerCase().includes(loc));
+  if (activeStatusTab !== 'all') list = list.filter(j => (j.status||'none') === activeStatusTab);
+  if (q) list = list.filter(j =>
+    (j.title||'').toLowerCase().includes(q) ||
+    (j.company||'').toLowerCase().includes(q) ||
+    (j.location||'').toLowerCase().includes(q)
+  );
+  const body = document.getElementById('allJobsBody');
+  body.innerHTML = list.length ? list.map(jobRow).join('')
+    : `<tr><td colspan="6"><div class="empty">No matching jobs.</div></td></tr>`;
+  document.getElementById('jobsPageCount').textContent = `${list.length} / ${allJobs.length}`;
+}
+
+function setStatusTab(el, tab) {
+  activeStatusTab = tab;
+  document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderAllJobs();
+}
+
+async function setStatus(jobId, newStatus, btn, kind) {
+  try {
+    const r = await fetch(`${API}/jobs/${jobId}/status`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({status: newStatus})
+    });
+    if (!r.ok) throw new Error('Failed');
+    // Update local data
+    const job = allJobs.find(j => j.id === jobId);
+    if (job) job.status = newStatus;
+    // Re-render just this row
+    const row = document.querySelector(`tr[data-id="${jobId}"]`);
+    if (row) {
+      const job = allJobs.find(j => j.id === jobId);
+      if (job) row.outerHTML = jobRow(job);
+    }
+    const labels = {saved:'Saved', applied:'Applied', rejected:'Rejected', none:'Cleared'};
+    showToast(labels[newStatus] || 'Updated');
+  } catch(e) { showToast('Update failed', true); }
+}
+
+async function sendDigest() {
+  try {
+    const r = await fetch(`${API}/digest/send`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({label:'Manual Digest'})
+    });
+    const d = await r.json();
+    if (d.status === 'nothing_pending') showToast('No new jobs pending in digest');
+    else if (d.status === 'sent') showToast(`Digest sent - ${d.count} jobs`);
+    else showToast('Digest send failed', true);
+  } catch(e) { showToast('API not reachable', true); }
+}
+
+function buildFilters() {
+  const cos = [...new Set(allJobs.map(j=>j.company))].sort();
+  document.getElementById('companyFilters').innerHTML = cos.map(c =>
+    `<div class="filter-chip" onclick="toggleFilter(this,'${esc(c)}')">${esc(c)}</div>`).join('');
+}
+function toggleFilter(el, co) {
+  if (activeCompany===co){activeCompany=null;el.classList.remove('active');}
+  else{activeCompany=co;document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');}
+  renderAllJobs();
+}
+
+// ── Companies page ──
+async function loadCompanies() {
+  try {
+    const data = await fetch(`${API}/companies`).then(r=>r.json());
+    const list = data.companies ?? data;
+    document.getElementById('companiesPageMeta').textContent = `${list.length} tracked`;
+    document.getElementById('companiesGrid').innerHTML = list.length
+      ? list.map((c,i) => `
+        <div class="company-card" style="animation-delay:${i*.04}s">
+          <button class="delete-btn" title="Stop tracking" onclick="deleteCompany('${esc(c.name)}')">&#10005;</button>
+          <div class="company-card-name">${esc(c.name)}</div>
+          <div class="company-card-url">${esc(c.url)}</div>
+          <div class="company-card-meta">
+            <span class="type-tag ${c.type==='js'?'type-js':'type-static'}">${c.type}</span>
+            <span class="company-job-count">${c.job_count??0} jobs</span>
+          </div>
+        </div>`).join('')
+      : `<div class="empty">No companies tracked yet.</div>`;
+  } catch(e) { document.getElementById('companiesGrid').innerHTML=`<div class="empty">API not running</div>`; }
+}
+
+// ── Add Company: new search-first UX ──
+function toggleAddPanel() {
+  document.getElementById('addPanelBody').classList.toggle('open');
+  document.getElementById('addChevron').classList.toggle('open');
+}
+
+function showResultState(state) {
+  document.getElementById('stateSearching').style.display = state==='searching' ? 'flex' : 'none';
+  document.getElementById('stateFound').style.display    = state==='found'     ? 'block' : 'none';
+  document.getElementById('stateError').style.display    = state==='error'     ? 'flex'  : 'none';
+  document.getElementById('resultCard').classList.add('visible');
+}
+
+async function searchCompany() {
+  const name = document.getElementById('companySearchInput').value.trim();
+  if (!name) { showToast('Type a company name first', true); return; }
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  currentResult = null;
+
+  // Show searching state
+  document.getElementById('searchingText').textContent = `Finding ${name}'s careers page...`;
+  showResultState('searching');
+
+  try {
+    const res = await fetch(`${API}/companies/search`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name})
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      // Show error state with manual URL fallback
+      document.getElementById('errorHeading').textContent = data.error || 'Could not find careers page';
+      document.getElementById('errorBody').textContent = `You can paste the careers URL directly below and we'll probe it.`;
+      document.getElementById('manualUrlInput').value = '';
+      showResultState('error');
+    } else {
+      currentResult = data;
+      renderFoundResult(data);
+      showResultState('found');
+    }
+  } catch(e) {
+    document.getElementById('errorHeading').textContent = 'API error';
+    document.getElementById('errorBody').textContent = e.message;
+    showResultState('error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderFoundResult(data) {
+  document.getElementById('resultName').textContent = data.name;
+  document.getElementById('resultUrl').textContent = data.url;
+  document.getElementById('resultUrlEdit').value = data.url;
+
+  // Badges
+  const jobCount = data.job_count || 0;
+  const jobBadge = jobCount > 0
+    ? `<span class="result-badge badge-jobs">${jobCount} jobs found</span>`
+    : `<span class="result-badge badge-warn">0 jobs detected</span>`;
+  const typeBadge = data.needs_js
+    ? `<span class="result-badge badge-js">JS-rendered</span>`
+    : `<span class="result-badge badge-static">Static HTML</span>`;
+  document.getElementById('resultBadges').innerHTML = jobBadge + typeBadge;
+
+  // Sample jobs
+  const samples = (data.sample_jobs||[]);
+  const samplesHtml = samples.length
+    ? samples.map(j => `<div class="result-sample">${esc(j.title)}</div>`).join('')
+    : `<div style="color:var(--muted);font-size:11px;padding:4px 0">No job titles detected yet — they may load dynamically. Tracking will still work.</div>`;
+
+  document.getElementById('resultBody').innerHTML = `
+    <div class="result-samples-label">Sample job titles detected</div>
+    <div class="result-samples">${samplesHtml}</div>`;
+}
+
+async function reprobeUrl() {
+  const url = document.getElementById('resultUrlEdit').value.trim();
+  if (!url) return;
+  document.getElementById('searchingText').textContent = 'Re-probing URL...';
+  showResultState('searching');
+  try {
+    const res = await fetch(`${API}/companies/probe`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})
+    });
+    const data = await res.json();
+    currentResult = { ...currentResult, ...data, url };
+    renderFoundResult(currentResult);
+    showResultState('found');
+  } catch(e) { showToast('Probe failed: '+e.message, true); showResultState('found'); }
+}
+
+async function manualProbe() {
+  const url = document.getElementById('manualUrlInput').value.trim();
+  const name = document.getElementById('companySearchInput').value.trim();
+  if (!url) { showToast('Paste a URL first', true); return; }
+  document.getElementById('searchingText').textContent = 'Probing URL...';
+  showResultState('searching');
+  try {
+    const res = await fetch(`${API}/companies/probe`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})
+    });
+    const data = await res.json();
+    currentResult = { name, url, ...data };
+    renderFoundResult(currentResult);
+    showResultState('found');
+  } catch(e) { showToast('Probe failed: '+e.message, true); showResultState('error'); }
+}
+
+async function confirmAdd() {
+  if (!currentResult) return;
+  const name = document.getElementById('companySearchInput').value.trim();
+  const url  = document.getElementById('resultUrlEdit').value.trim() || currentResult.url;
+  const btn  = document.getElementById('confirmBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const res = await fetch(`${API}/companies/add`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, url, type: currentResult.needs_js?'js':'static', selectors: currentResult.selectors })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error||'Failed to add');
+    showToast(`${name} added! Scraping now...`);
+    // Reset
+    document.getElementById('companySearchInput').value = '';
+    document.getElementById('resultCard').classList.remove('visible');
+    currentResult = null;
+    setTimeout(() => { loadCompanies(); loadStats(); }, 4000);
+  } catch(e) { showToast(e.message, true); }
+  finally { btn.disabled=false; btn.textContent='\u2713 Start Tracking'; }
+}
+
+async function deleteCompany(name) {
+  if (!confirm(`Stop tracking "${name}"?`)) return;
+  try {
+    const res = await fetch(`${API}/companies/delete`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error||'Failed');
+    showToast(`${name} removed`);
+    loadCompanies(); loadStats();
+  } catch(e) { showToast(e.message, true); }
+}
+
+// ── Trigger run ──
+async function triggerRun() {
+  const btn=document.getElementById('runBtn'), status=document.getElementById('runStatus');
+  btn.disabled=true; status.textContent='running...';
+  try {
+    const r = await fetch(`${API}/run`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dry_run:true})});
+    const d = await r.json();
+    status.textContent = d.status==='started'?'check started':d.message;
+    showToast('Scrape check started!');
+    setTimeout(()=>{loadStats();loadRecentJobs();loadAllJobs();},6000);
+  } catch(e){status.textContent='API not reachable';}
+  finally{setTimeout(()=>{btn.disabled=false;status.textContent='';},4000);}
+}
+
+function copyBlock(btn) {
+  const text = [...btn.parentElement.querySelectorAll('div')].map(d=>d.textContent.trim()).filter(Boolean).join('\n');
+  navigator.clipboard.writeText(text).then(()=>{btn.textContent='copied';setTimeout(()=>btn.textContent='copy',1500);});
+}
+
+// ── Init ──
+loadStats(); loadRecentJobs(); loadAllJobs(); loadCompanies();
+setInterval(()=>{loadStats();loadRecentJobs();},30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+jobs.db
+job_alert.log
+venv/
+__pycache__/
+*.pyc
+.claude/

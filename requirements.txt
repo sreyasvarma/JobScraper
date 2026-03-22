@@ -1,0 +1,15 @@
+# Core scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# JS-rendered sites (React, SPA career pages)
+playwright>=1.40.0
+
+# Config
+pyyaml>=6.0
+
+# API server (powers the dashboard)
+flask>=3.0.0
+flask-cors>=4.0.0
+twilio>=8.0.0  # WhatsApp notifications

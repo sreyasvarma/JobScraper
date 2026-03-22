@@ -1,0 +1,64 @@
+name: Job Alert
+
+on:
+  schedule:
+    # Runs every 4 hours
+    - cron: "0 */4 * * *"
+  workflow_dispatch:   # Allows manual trigger from GitHub UI
+
+jobs:
+  check-jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Cache the SQLite DB between runs using GitHub Actions cache
+      - name: Restore job database
+        uses: actions/cache@v4
+        with:
+          path: jobs.db
+          key: jobs-db-${{ github.run_id }}
+          restore-keys: |
+            jobs-db-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium --with-deps
+
+      - name: Write config (with secrets from GitHub Secrets)
+        env:
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: |
+          python - <<'EOF'
+          import yaml, os
+
+          with open("config.yaml") as f:
+              cfg = yaml.safe_load(f)
+
+          cfg["email"]["sender"]    = os.environ["EMAIL_SENDER"]
+          cfg["email"]["password"]  = os.environ["EMAIL_PASSWORD"]
+          cfg["email"]["recipient"] = os.environ["EMAIL_RECIPIENT"]
+
+          with open("config.yaml", "w") as f:
+              yaml.dump(cfg, f)
+          EOF
+
+      - name: Run job check
+        run: python main.py --once
+
+      - name: Save updated database
+        uses: actions/cache@v4
+        with:
+          path: jobs.db
+          key: jobs-db-${{ github.run_id }}
