@@ -244,16 +244,27 @@ class GenericJSScraper(BaseScraper):
 def scraper_for(company_config: dict) -> BaseScraper:
     """
     Factory: pick the right scraper for a company.
-    Apple gets a dedicated API-based scraper.
+    Several companies have dedicated scrapers for their custom career sites.
     Everything else uses the generic HTML scraper.
     """
     name = company_config.get("name", "").lower()
     url  = company_config.get("url", "").lower()
 
-    # Route Apple to its dedicated API scraper
     if "apple" in name or "jobs.apple.com" in url:
         from .apple import AppleScraper
         return AppleScraper(company_config)
+
+    if "nvidia" in name or "jobs.nvidia.com" in url:
+        from .nvidia import NvidiaScraper
+        return NvidiaScraper(company_config)
+
+    if "rippling" in name or "ats.rippling.com" in url or "rippling.com/careers" in url:
+        from .rippling import RipplingScraper
+        return RipplingScraper(company_config)
+
+    if "meta" in name or "metacareers.com" in url:
+        from .meta import MetaScraper
+        return MetaScraper(company_config)
 
     if company_config.get("type", "static") == "js":
         return GenericJSScraper(company_config)

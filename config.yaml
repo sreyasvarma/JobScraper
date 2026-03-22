@@ -11,29 +11,28 @@ email:
   smtp_port: 587
 companies:
 - name: Apple
-  url: https://jobs.apple.com/en-in/search
+  url: https://jobs.apple.com/en-in/search?location=india-INDC
   type: api
-  apple_location_code: india-IND
   selectors:
     container: ''
     title: ''
     location: ''
 - name: Nvidia
-  url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+  url: https://jobs.nvidia.com/careers?location=india&filter_include_remote=1
   type: js
   selectors:
-    container: a[data-automation-id='jobTitle']
-    title: a[data-automation-id='jobTitle']
-    location: dd[data-automation-id='location']
+    container: a[href*='/careers/job/']
+    title: '[class*=''title'']'
+    location: ''
 - name: Meta
-  url: https://www.metacareers.com/jobs
+  url: "https://www.metacareers.com/jobsearch?offices[0]=Bangalore%2C%20India&offices[1]=Gurgaon%2C%20India&offices[2]=Hyderabad%2C%20India&offices[3]=New%20Delhi%2C%20India"
   type: js
   selectors:
-    container: a[href*='/jobs/']
-    title: div[class*='title'], h3, h2, span[class*='title']
-    location: span[class*='location'], div[class*='location']
+    container: a[href*='/profile/job_details/']
+    title: ''
+    location: ''
 - name: Google
-  url: https://careers.google.com/jobs/results/
+  url: https://www.google.com/about/careers/applications/jobs/results/?location=India
   type: js
   selectors:
     container: a[href*='/jobs/results/']
@@ -61,7 +60,7 @@ companies:
     title: span[class*='title'], h3, h2
     location: span[class*='location'], p[class*='location']
 - name: Walmart
-  url: https://careers.walmart.com/results
+  url: https://careers.walmart.com/results?q=&page=1&sort=rank&expand=department,brand,type,rate&jobCountry=India
   type: js
   selectors:
     container: a[href*='/job/']
@@ -82,10 +81,10 @@ companies:
     title: h4, h3, h2, div[class*='job-title'], div[class*='title']
     location: span[class*='location'], div[class*='location'], p[class*='location']
 - name: Gartner
-  url: https://jobs.gartner.com/jobs
+  url: https://jobs.gartner.com/jobs/?search=&country=India&pagesize=100
   type: js
   selectors:
-    container: a[href*='/jobs/']
+    container: a[href*='/jobs/job/']
     title: h3, h2, span[class*='title']
     location: span[class*='location'], p[class*='location']
 - name: Cisco
@@ -145,19 +144,19 @@ companies:
     title: h3, h2, div[class*='title'], span[class*='title']
     location: span[class*='location'], p[class*='location'], div[class*='location']
 - name: Stripe
-  url: https://stripe.com/jobs
+  url: "https://stripe.com/jobs/search?remote_locations=Asia+Pacific--India+Remote&office_locations=Asia+Pacific--Bengaluru"
   type: js
   selectors:
-    container: a[href*='/jobs/']
+    container: a[href*='/jobs/listing/']
     title: span[class*='title'], h3, h4, div[class*='title']
     location: span[class*='location'], p[class*='location']
 - name: Rippling
-  url: https://www.rippling.com/careers
+  url: https://www.rippling.com/careers/open-roles
   type: js
   selectors:
-    container: a[href*='/careers/']
-    title: h3, h2, div[class*='title']
-    location: span[class*='location'], p[class*='location']
+    container: a[href*='ats.rippling.com/rippling/jobs/']
+    title: p
+    location: ''
 - name: PayPal
   url: https://careers.pypl.com/home/
   type: js
