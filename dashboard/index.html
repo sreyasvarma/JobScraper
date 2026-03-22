@@ -286,9 +286,8 @@
       <div class="section-head"><div class="section-title">All Jobs</div><div class="section-line"></div><div class="section-meta" id="jobsPageCount"></div></div>
       <div class="filter-bar">
         <input class="filter-input" id="searchInput" placeholder="Search roles, companies..." oninput="renderAllJobs()" />
-        <select class="filter-input" id="locationFilter" onchange="renderAllJobs()" style="width:180px;cursor:pointer;">
-          <option value="">All Locations</option>
-        </select>
+        <input class="filter-input" id="locationFilter" placeholder="Filter location, e.g. India, USA..." oninput="renderAllJobs()" style="width:220px;" />
+        <button class="status-tab" id="remoteBtn" onclick="toggleRemote(this)" title="Show only remote / global / worldwide jobs">&#127758; Remote / Global</button>
         <div class="status-tabs">
           <button class="status-tab active" onclick="setStatusTab(this,'all')">All</button>
           <button class="status-tab" onclick="setStatusTab(this,'saved')">Saved</button>
@@ -439,8 +438,8 @@
 const API = 'http://localhost:5000/api';
 let allJobs = [];
 let activeCompany = null;
-let allLocations = [];
 let activeStatusTab = 'all';
+let showRemoteOnly = false;
 let currentResult = null;   // holds the last search/probe result
 const cutoff24h = () => new Date(Date.now() - 86400000);
 
@@ -503,25 +502,47 @@ function jobRow(job) {
 // ── Stats ──
 async function loadStats() {
   try {
-    const s = await fetch(`${API}/stats`).then(r=>r.json());
+    const [s, compData] = await Promise.all([
+      fetch(`${API}/stats`).then(r=>r.json()),
+      fetch(`${API}/companies`).then(r=>r.json()),
+    ]);
     document.getElementById('apiWarning').style.display = 'none';
     document.getElementById('statTotal').textContent = s.total_jobs ?? 0;
-    document.getElementById('statCompanies').textContent = s.companies_tracked ?? 0;
+    document.getElementById('statCompanies').textContent = (compData.companies||[]).length;
     document.getElementById('statRuns').textContent = s.total_runs ?? 0;
     document.getElementById('navTotal').textContent = s.total_jobs ?? 0;
     document.getElementById('navJobs').textContent = s.total_jobs ?? 0;
-    document.getElementById('navCompanies').textContent = s.companies_tracked ?? 0;
+    document.getElementById('navCompanies').textContent = (compData.companies||[]).length;
     document.getElementById('statSaved').textContent   = s.saved ?? 0;
     document.getElementById('statApplied').textContent = s.applied ?? 0;
     document.getElementById('statRemote').textContent  = s.remote_jobs ?? 0;
-    if (s.by_company?.length) {
-      document.getElementById('companyBreakdown').innerHTML = s.by_company.map((c,i) =>
-        `<div class="company-card" style="animation-delay:${i*.04}s">
-          <div class="company-card-name">${esc(c.company)}</div>
-          <div class="company-job-count">${c.count} job${c.count!==1?'s':''} found</div>
-        </div>`).join('');
+    // Build job count map from stats
+    const countMap = {};
+    (s.by_company || []).forEach(c => { countMap[c.company] = c.count; });
+    // Show ALL tracked companies (even those with 0 jobs scraped yet)
+    const allCos = compData.companies || [];
+    if (allCos.length) {
+      document.getElementById('companyBreakdown').innerHTML = allCos.map((c,i) => {
+        const cnt = countMap[c.name] || 0;
+        return `<div class="company-card" style="animation-delay:${i*.025}s;cursor:pointer" onclick="goToCompany('${esc(c.name)}')">
+          <div class="company-card-name">${esc(c.name)}</div>
+          <div class="company-job-count" style="color:${cnt>0?'var(--green)':'var(--muted)'}">${cnt} job${cnt!==1?'s':''} found</div>
+        </div>`;
+      }).join('');
     }
   } catch(e) { document.getElementById('apiWarning').style.display = 'block'; }
+}
+
+function goToCompany(name) {
+  activeCompany = name;
+  const jobsNav = document.querySelector('.nav-item[onclick*="jobs"]');
+  navigate(jobsNav, 'jobs');
+  loadAllJobs().then(() => {
+    document.querySelectorAll('.filter-chip').forEach(f => {
+      f.classList.toggle('active', f.textContent.trim() === name);
+    });
+    renderAllJobs();
+  });
 }
 
 // ── Recent jobs ──
@@ -552,29 +573,15 @@ async function loadAllJobs() {
   }
 }
 
-async function loadLocations() {
-  try {
-    const locs = await fetch(`${API}/locations`).then(r=>r.json());
-    allLocations = locs;
-    const sel = document.getElementById('locationFilter');
-    const current = sel.value;
-    sel.innerHTML = '<option value="">All Locations</option>';
-    locs.forEach(l => {
-      const opt = document.createElement('option');
-      opt.value = l.location;
-      opt.textContent = `${l.location} (${l.count})`;
-      sel.appendChild(opt);
-    });
-    sel.value = current;
-  } catch(e) {}
-}
+function loadLocations() { /* location filter is now a free-text input — no population needed */ }
 
 function renderAllJobs() {
   const q   = document.getElementById('searchInput').value.toLowerCase();
-  const loc = document.getElementById('locationFilter').value.toLowerCase();
+  const loc = document.getElementById('locationFilter').value.toLowerCase().trim();
   let list  = allJobs;
   if (activeCompany)             list = list.filter(j => j.company === activeCompany);
-  if (loc)                       list = list.filter(j => j.is_remote ? 'remote'.includes(loc) : (j.location||'').toLowerCase().includes(loc));
+  if (showRemoteOnly)            list = list.filter(j => j.is_remote || /remote|global|worldwide|anywhere|distributed/i.test(j.location||''));
+  if (loc)                       list = list.filter(j => (j.location||'').toLowerCase().includes(loc) || (j.is_remote && 'remote'.includes(loc)));
   if (activeStatusTab !== 'all') list = list.filter(j => (j.status||'none') === activeStatusTab);
   if (q) list = list.filter(j =>
     (j.title||'').toLowerCase().includes(q) ||
@@ -585,6 +592,12 @@ function renderAllJobs() {
   body.innerHTML = list.length ? list.map(jobRow).join('')
     : `<tr><td colspan="6"><div class="empty">No matching jobs.</div></td></tr>`;
   document.getElementById('jobsPageCount').textContent = `${list.length} / ${allJobs.length}`;
+}
+
+function toggleRemote(btn) {
+  showRemoteOnly = !showRemoteOnly;
+  btn.classList.toggle('active', showRemoteOnly);
+  renderAllJobs();
 }
 
 function setStatusTab(el, tab) {

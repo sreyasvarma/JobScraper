@@ -349,38 +349,65 @@ companies:
     location: span[class*='location']
 keywords_filter:
   include:
+  # DevOps / SRE / Platform
   - devops
   - dev ops
+  - devsecops
   - sre
   - site reliability
   - platform engineer
+  - platform engineering
   - infrastructure
   - infra
   - ci/cd
   - cicd
+  - pipeline
   - kubernetes
   - k8s
+  - docker
   - terraform
   - ansible
   - helm
   - jenkins
+  - gitlab
   - cloud engineer
-  - devsecops
+  - cloud ops
+  - cloud native
+  - reliability engineer
+  - network engineer
+  - networking
+  - observability
+  - monitoring
+  # Cloud / Compute / Architecture
   - cloud
   - aws
   - azure
   - gcp
+  - google cloud
+  - amazon web services
   - solutions architect
   - cloud architect
+  - compute
+  - distributed systems
+  - systems engineer
+  # Developer Experience / Tooling
+  - developer experience
+  - developer productivity
+  - developer platform
+  - developer tools
+  - devex
+  - dx engineer
+  # AI / ML / Data
   - machine learning
   - ml engineer
   - ai engineer
   - data scientist
+  - data engineer
   - deep learning
   - nlp
   - llm
+  - large language
   - computer vision
-  - mlops
   - mlops
   - research scientist
   - research engineer
@@ -388,12 +415,22 @@ keywords_filter:
   - artificial intelligence
   - generative ai
   - gen ai
-  - data engineer
+  - foundation model
+  - reinforcement learning
+  - embeddings
+  - rag
+  - staff engineer
+  - principal engineer
   exclude:
   - intern
   - director
   - 'vp '
   - vice president
+  - legal
+  - marketing manager
+  - sales manager
+  - account executive
+  - recruiter
 storage:
   db_path: jobs.db
   log_path: job_alert.log
