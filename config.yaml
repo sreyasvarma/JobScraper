@@ -426,11 +426,23 @@ keywords_filter:
   - director
   - 'vp '
   - vice president
-  - legal
+  - legal counsel
   - marketing manager
   - sales manager
+  - sales representative
+  - sales development
   - account executive
+  - account manager
   - recruiter
+  - recruiting
+  - talent acquisition
+  - transaction advisor
+  - deal manager
+  - financial advisor
+  - investment banker
+  - portfolio manager
+  - relationship manager
+  - business development representative
 storage:
   db_path: jobs.db
   log_path: job_alert.log
