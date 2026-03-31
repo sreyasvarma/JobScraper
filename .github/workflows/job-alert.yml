@@ -65,6 +65,9 @@ jobs:
       - name: Run job check
         run: python main.py --once
 
+      - name: Send digest
+        run: python main.py --send-digest
+
       - name: Save updated database
         uses: actions/cache@v4
         with:
