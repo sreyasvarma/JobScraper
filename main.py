@@ -127,14 +127,15 @@ def send_pending_digest(config: dict, label: str):
         logger.error(f"Email digest failed: {e}")
 
     # WhatsApp digest
+    wa_sent = False
     if config.get("whatsapp"):
         try:
-            send_whatsapp_digest(pending, config["whatsapp"], label=label)
+            wa_sent = send_whatsapp_digest(pending, config["whatsapp"], label=label)
         except Exception as e:
             logger.error(f"WhatsApp digest failed: {e}")
 
-    # Mark as notified so they don't appear in the next digest
-    if sent:
+    # Mark as notified if any channel succeeded
+    if sent or wa_sent:
         storage.mark_notified([j["id"] for j in pending])
         logger.info(f"Marked {len(pending)} jobs as notified")
 
