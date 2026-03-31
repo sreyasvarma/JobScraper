@@ -9,6 +9,9 @@ on:
 jobs:
   check-jobs:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./files
 
     steps:
       - name: Checkout code
@@ -18,7 +21,7 @@ jobs:
       - name: Restore job database
         uses: actions/cache@v4
         with:
-          path: jobs.db
+          path: files/jobs.db
           key: jobs-db-${{ github.run_id }}
           restore-keys: |
             jobs-db-
@@ -60,5 +63,5 @@ jobs:
       - name: Save updated database
         uses: actions/cache@v4
         with:
-          path: jobs.db
+          path: files/jobs.db
           key: jobs-db-${{ github.run_id }}
