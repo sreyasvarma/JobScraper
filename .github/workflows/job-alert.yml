@@ -38,16 +38,25 @@ jobs:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          WHATSAPP_FROM: ${{ secrets.WHATSAPP_FROM }}
+          WHATSAPP_TO: ${{ secrets.WHATSAPP_TO }}
         run: |
           python - <<'EOF'
           import yaml, os
 
-          with open("config.yaml") as f:
+          with open("config.template.yaml") as f:
               cfg = yaml.safe_load(f)
 
           cfg["email"]["sender"]    = os.environ["EMAIL_SENDER"]
           cfg["email"]["password"]  = os.environ["EMAIL_PASSWORD"]
           cfg["email"]["recipient"] = os.environ["EMAIL_RECIPIENT"]
+
+          cfg["whatsapp"]["account_sid"] = os.environ.get("TWILIO_ACCOUNT_SID", "")
+          cfg["whatsapp"]["auth_token"]  = os.environ.get("TWILIO_AUTH_TOKEN", "")
+          cfg["whatsapp"]["from_number"] = os.environ.get("WHATSAPP_FROM", "")
+          cfg["whatsapp"]["to_number"]   = os.environ.get("WHATSAPP_TO", "")
 
           with open("config.yaml", "w") as f:
               yaml.dump(cfg, f)

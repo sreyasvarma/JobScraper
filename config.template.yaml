@@ -1,0 +1,448 @@
+schedule:
+  interval_hours: 4
+  digest_times:
+  - 09:00
+  - '18:00'
+email:
+  sender: ''
+  password: ''
+  recipient: ''
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+companies:
+- name: Apple
+  url: https://jobs.apple.com/en-in/search?location=india-INDC
+  type: api
+  selectors:
+    container: ''
+    title: ''
+    location: ''
+- name: Nvidia
+  url: https://jobs.nvidia.com/careers?location=india&filter_include_remote=1
+  type: js
+  selectors:
+    container: a[href*='/careers/job/']
+    title: '[class*=''title'']'
+    location: ''
+- name: Meta
+  url: https://www.metacareers.com/jobsearch?offices[0]=Bangalore%2C%20India&offices[1]=Gurgaon%2C%20India&offices[2]=Hyderabad%2C%20India&offices[3]=New%20Delhi%2C%20India
+  type: js
+  selectors:
+    container: a[href*='/profile/job_details/']
+    title: ''
+    location: ''
+- name: Google
+  url: https://www.google.com/about/careers/applications/jobs/results/?location=India
+  type: js
+  selectors:
+    container: a[href*='/jobs/results/']
+    title: h3, h2, span[class*='title'], div[class*='title']
+    location: span[class*='location'], div[class*='location']
+- name: Amazon
+  url: https://www.amazon.jobs/en/search?base_query=&loc_query=India
+  type: js
+  selectors:
+    container: div.job-tile
+    title: h3.job-title a
+    location: p.location-and-id
+- name: Adobe
+  url: https://careers.adobe.com/us/en/search-results
+  type: js
+  selectors:
+    container: li[class*='jobs-list-item'] a
+    title: span[class*='job-title'], h3, h2
+    location: span[class*='job-location'], span[class*='location']
+- name: LinkedIn
+  url: https://careers.linkedin.com/jobs
+  type: js
+  selectors:
+    container: a[href*='/jobs/view'], a[href*='linkedin.com/jobs/view']
+    title: span[class*='title'], h3, h2
+    location: span[class*='location'], p[class*='location']
+- name: Walmart
+  url: https://careers.walmart.com/results?q=&page=1&sort=rank&expand=department,brand,type,rate&jobCountry=India
+  type: js
+  selectors:
+    container: a[href*='/job/']
+    title: h3, h2, span[class*='title'], div[class*='title']
+    location: span[class*='location'], li[class*='location']
+- name: Goldman Sachs
+  url: https://higher.gs.com/roles
+  type: js
+  selectors:
+    container: a[href*='/roles/']
+    title: h3, h2, p[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: American Express
+  url: https://aexp.eightfold.ai/careers?query=&location=India
+  type: js
+  selectors:
+    container: a[href*='/careers/jobs/']
+    title: h4, h3, h2, div[class*='job-title'], div[class*='title']
+    location: span[class*='location'], div[class*='location'], p[class*='location']
+- name: Gartner
+  url: https://jobs.gartner.com/jobs/?search=&country=India&pagesize=100
+  type: js
+  selectors:
+    container: a[href*='/jobs/job/']
+    title: h3, h2, span[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: Cisco
+  url: https://jobs.cisco.com/jobs/SearchJobs/?21178_keyword=&listFilterMode=1&21178_sortBy=POSTING_DATE
+  type: js
+  selectors:
+    container: a[href*='ProjectDetail'], a[href*='/jobs/']
+    title: h2, h3, span.jobTitle, span[class*='title']
+    location: span.jobLocation, span[class*='location']
+- name: Morgan Stanley
+  url: https://morganstanley.eightfold.ai/careers?query=&location=India
+  type: js
+  selectors:
+    container: a[href*='/careers/jobs/']
+    title: h4, h3, h2, div[class*='job-title'], div[class*='title']
+    location: span[class*='location'], div[class*='location'], p[class*='location']
+- name: JP Morgan Chase
+  url: https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs
+  type: js
+  selectors:
+    container: a[href*='/job/']
+    title: h3, span[class*='title'], div[class*='title']
+    location: span[class*='location'], div[class*='location']
+- name: Maersk
+  url: https://www.maersk.com/careers/vacancies
+  type: js
+  selectors:
+    container: a[href*='/careers/vacancies/']
+    title: h3, h2, span[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: Atlassian
+  url: https://www.atlassian.com/company/careers/all-jobs
+  type: js
+  selectors:
+    container: a[href*='/careers/detail'], a[href*='/careers/job']
+    title: h3, h2, p[class*='title'], span[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: Oracle
+  url: https://careers.oracle.com/jobs/#en/sites/jobsearch/jobs
+  type: js
+  selectors:
+    container: a[href*='/job/']
+    title: h2, h3, span[class*='title'], div[class*='title']
+    location: span[class*='location'], div[class*='location']
+- name: Uber
+  url: https://www.uber.com/us/en/careers/list/
+  type: js
+  selectors:
+    container: a[href*='/careers/list/']
+    title: h3, div[class*='title'], span[class*='title']
+    location: span[class*='location'], div[class*='location']
+- name: Airbnb
+  url: https://careers.airbnb.com/
+  type: js
+  selectors:
+    container: a[href*='grnh.se'], a[href*='greenhouse.io'], a[href*='/positions/']
+    title: h3, h2, div[class*='title'], span[class*='title']
+    location: span[class*='location'], p[class*='location'], div[class*='location']
+- name: Stripe
+  url: https://stripe.com/jobs/search?remote_locations=Asia+Pacific--India+Remote&office_locations=Asia+Pacific--Bengaluru
+  type: js
+  selectors:
+    container: a[href*='/jobs/listing/']
+    title: span[class*='title'], h3, h4, div[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: Rippling
+  url: https://www.rippling.com/careers/open-roles
+  type: js
+  selectors:
+    container: a[href*='ats.rippling.com/rippling/jobs/']
+    title: p
+    location: ''
+- name: PayPal
+  url: https://careers.pypl.com/home/
+  type: js
+  selectors:
+    container: a[href*='/job/'], a[href*='paypal.com/jobs']
+    title: h3, h2, span[class*='title'], div[class*='title']
+    location: span[class*='location'], div[class*='location']
+- name: Intuit
+  url: https://jobs.intuit.com/search-jobs
+  type: js
+  selectors:
+    container: a[href*='/job/']
+    title: h2, h3, span.job-title
+    location: span.job-location, span[class*='location']
+- name: Crowdstrike
+  url: https://crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers
+  type: js
+  selectors:
+    container: a[data-automation-id='jobTitle']
+    title: a[data-automation-id='jobTitle']
+    location: dd[data-automation-id='location']
+- name: Nutanix
+  url: https://jobs.jobvite.com/nutanix/jobs
+  type: static
+  selectors:
+    container: a.jv-job-list-name
+    title: a.jv-job-list-name
+    location: span.jv-job-list-location
+- name: Glean
+  url: https://www.glean.com/careers
+  type: js
+  selectors:
+    container: a[href*='ashbyhq.com/glean'], a[href*='lever.co/glean']
+    title: h3, h2, div[class*='title'], span[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: Rubrik
+  url: https://www.rubrik.com/company/careers/departments
+  type: js
+  selectors:
+    container: a[href*='lever.co/rubrik'], a[href*='jobs.lever.co/rubrik']
+    title: h5, h4, h3, div[class*='posting-name'], div[class*='title']
+    location: span[class*='location'], div[class*='location']
+- name: Coupang
+  url: https://www.coupang.jobs/en/jobs/
+  type: js
+  selectors:
+    container: a[href*='/en/jobs/']
+    title: h3, h2, span[class*='title']
+    location: span[class*='location'], li[class*='location']
+- name: Broadcom
+  url: https://broadcom.wd1.myworkdayjobs.com/External_Career
+  type: js
+  selectors:
+    container: a[data-automation-id='jobTitle']
+    title: a[data-automation-id='jobTitle']
+    location: dd[data-automation-id='location']
+- name: Roku
+  url: https://www.roku.com/en-us/about/jobs
+  type: js
+  selectors:
+    container: a[href*='lever.co/roku'], a[href*='jobs.lever.co/roku']
+    title: h5, h4, h3, div[class*='posting-name'], div[class*='title']
+    location: span[class*='location']
+- name: Wayfair
+  url: https://www.wayfair.com/careers/jobs
+  type: js
+  selectors:
+    container: a[href*='/careers/jobs/']
+    title: h3, h2, span[class*='title']
+    location: span[class*='location']
+- name: Automattic
+  url: https://automattic.com/work-with-us/
+  type: static
+  selectors:
+    container: a[href*='greenhouse.io/automattic'], a[href*='/jobs/'], a.job-listing
+    title: h3, h2, p.job-title, span[class*='title']
+    location: p.location, span.location, span[class*='location']
+- name: DuckDuckGo
+  url: https://duckduckgo.com/hiring
+  type: static
+  selectors:
+    container: a[href*='lever.co/duckduckgo'], a[href*='jobs.lever.co/duckduckgo']
+    title: h5, h4, h3, div[class*='posting-name']
+    location: span[class*='location']
+- name: Hashicorp
+  url: https://www.hashicorp.com/en/careers/open-positions
+  type: js
+  selectors:
+    container: a[href*='greenhouse.io/hashicorp'], a[href*='grnh.se']
+    title: h3, h2, p[class*='title'], div[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: Splunk
+  url: https://www.splunk.com/en_us/careers/jobs.html
+  type: static
+  selectors:
+    container: a[href*='/careers/jobs/']
+    title: h3, h2, span[class*='title']
+    location: span[class*='location']
+- name: Arcesium
+  url: https://www.arcesium.com/careers/
+  type: js
+  selectors:
+    container: a[href*='lever.co/arcesium'], a[href*='greenhouse.io']
+    title: h5, h3, div[class*='posting-name']
+    location: span[class*='location']
+- name: DE Shaw
+  url: https://www.deshaw.com/careers/choose-your-path
+  type: js
+  selectors:
+    container: a[href*='/careers/']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location'], p[class*='location']
+- name: KKR
+  url: https://kkr.wd1.myworkdayjobs.com/KKR
+  type: js
+  selectors:
+    container: a[data-automation-id='jobTitle']
+    title: a[data-automation-id='jobTitle']
+    location: dd[data-automation-id='location']
+- name: Tabby
+  url: https://tabby.ai/careers
+  type: js
+  selectors:
+    container: a[href*='lever.co/tabby'], a[href*='ashbyhq.com/tabby'], a[href*='/careers/']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location']
+- name: Alphagrep
+  url: https://alphagrep.com/careers
+  type: js
+  selectors:
+    container: a[href*='/careers/'], a[href*='lever.co'], a[href*='greenhouse.io']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location']
+- name: Micro1
+  url: https://www.micro1.ai/careers
+  type: js
+  selectors:
+    container: a[href*='ashbyhq.com/micro1'], a[href*='/careers/']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location']
+- name: Skyflow
+  url: https://www.skyflow.com/company/careers
+  type: js
+  selectors:
+    container: a[href*='lever.co/skyflow'], a[href*='greenhouse.io']
+    title: h5, h3, div[class*='posting-name']
+    location: span[class*='location']
+- name: Prophecy
+  url: https://www.prophecy.io/careers
+  type: js
+  selectors:
+    container: a[href*='lever.co/prophecy'], a[href*='ashbyhq.com'], a[href*='/careers/']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location']
+- name: Buffer
+  url: https://buffer.com/journey
+  type: static
+  selectors:
+    container: a[href*='lever.co/buffer'], a[href*='greenhouse.io/buffer']
+    title: h5, h3, div[class*='posting-name']
+    location: span[class*='location']
+- name: RevenueCat
+  url: https://www.revenuecat.com/jobs/
+  type: js
+  selectors:
+    container: a[href*='lever.co/revenuecat'], a[href*='/jobs/']
+    title: h5, h3, div[class*='title']
+    location: span[class*='location']
+- name: Flashbots
+  url: https://flashbots.net/jobs
+  type: js
+  selectors:
+    container: a[href*='lever.co/flashbots'], a[href*='greenhouse.io'], a[href*='/jobs/']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location']
+- name: Nethermind
+  url: https://nethermind.io/careers
+  type: js
+  selectors:
+    container: a[href*='lever.co/nethermind'], a[href*='greenhouse.io'], a[href*='/careers/']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location']
+- name: Arcana
+  url: https://arcana.network/careers
+  type: js
+  selectors:
+    container: a[href*='lever.co'], a[href*='greenhouse.io'], a[href*='/careers/']
+    title: h3, h2, div[class*='title']
+    location: span[class*='location']
+keywords_filter:
+  include:
+  - devops
+  - dev ops
+  - devsecops
+  - sre
+  - site reliability
+  - platform engineer
+  - platform engineering
+  - infrastructure
+  - infra
+  - ci/cd
+  - cicd
+  - pipeline
+  - kubernetes
+  - k8s
+  - docker
+  - terraform
+  - ansible
+  - helm
+  - jenkins
+  - gitlab
+  - cloud engineer
+  - cloud ops
+  - cloud native
+  - reliability engineer
+  - network engineer
+  - networking
+  - observability
+  - monitoring
+  - cloud
+  - aws
+  - azure
+  - gcp
+  - google cloud
+  - amazon web services
+  - solutions architect
+  - cloud architect
+  - compute
+  - distributed systems
+  - systems engineer
+  - developer experience
+  - developer productivity
+  - developer platform
+  - developer tools
+  - devex
+  - dx engineer
+  - machine learning
+  - ml engineer
+  - ai engineer
+  - data scientist
+  - data engineer
+  - deep learning
+  - nlp
+  - llm
+  - large language
+  - computer vision
+  - mlops
+  - research scientist
+  - research engineer
+  - applied scientist
+  - artificial intelligence
+  - generative ai
+  - gen ai
+  - foundation model
+  - reinforcement learning
+  - embeddings
+  - rag
+  - staff engineer
+  - principal engineer
+  exclude:
+  - intern
+  - director
+  - 'vp '
+  - vice president
+  - legal counsel
+  - marketing manager
+  - sales manager
+  - sales representative
+  - sales development
+  - account executive
+  - account manager
+  - recruiter
+  - recruiting
+  - talent acquisition
+  - transaction advisor
+  - deal manager
+  - financial advisor
+  - investment banker
+  - portfolio manager
+  - relationship manager
+  - business development representative
+storage:
+  db_path: jobs.db
+  log_path: job_alert.log
+whatsapp:
+  account_sid: ''
+  auth_token: ''
+  from_number: ''
+  to_number: ''
